@@ -349,7 +349,7 @@ class DnacBase():
                 break
 
             self.log("progress set to {0} for taskid: {1}".format(task_details.get('progress'), task_id), "DEBUG")
-        self.log(str(current_time))
+
         if current_time - start_time > 5:
             self.msg = "Task '{0}' operation exceeds five second.".format(task_id)
             self.status = "failed"
