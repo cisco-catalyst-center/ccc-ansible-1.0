@@ -24,7 +24,7 @@ else:
 import os.path
 import copy
 import json
-# import datetime
+import time
 import inspect
 import re
 
@@ -328,10 +328,11 @@ class DnacBase():
             return self
 
         task_id = response.get("taskId")
-        while True:
+        start_time = time.time()
+        while (time.time() - start_time) <= 5:
+            current_time = time.time()
             task_details = self.get_task_details(task_id)
             self.log('Getting task details from task ID {0}: {1}'.format(task_id, task_details), "DEBUG")
-
             if task_details.get("isError") is True:
                 if task_details.get("failureReason"):
                     self.msg = str(task_details.get("failureReason"))
@@ -348,7 +349,10 @@ class DnacBase():
                 break
 
             self.log("progress set to {0} for taskid: {1}".format(task_details.get('progress'), task_id), "DEBUG")
-
+        self.log(str(current_time))
+        if current_time - start_time > 5:
+            self.msg = "Task '{0}' operation exceeds five second.".format(task_id)
+            self.status = "failed"
         return self
 
     def reset_values(self):
@@ -399,7 +403,9 @@ class DnacBase():
             return self
 
         executionid = response.get("executionId")
-        while True:
+        start_time = time.time()
+        while (time.time() - start_time) <= 5:
+            current_time = time.time()
             execution_details = self.get_execution_details(executionid)
             if execution_details.get("status") == "SUCCESS":
                 self.result['changed'] = True
@@ -411,7 +417,9 @@ class DnacBase():
                 self.msg = execution_details.get("bapiError")
                 self.status = "failed"
                 break
-
+        if current_time - start_time > 5:
+            self.msg = "Execution '{0}' operation exceeds five second".format(executionid)
+            self.status = "failed"
         return self
 
     def check_string_dictionary(self, task_details_data):
